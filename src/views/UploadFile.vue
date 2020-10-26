@@ -52,7 +52,7 @@ export default {
   data() {
     return {
       departments: [],
-
+      all_office_by_name:[],
       dataArr: [],
       listStaff:[],
       listStaffAfter:[],
@@ -163,26 +163,43 @@ export default {
             excellist.push(ws[i]);
           }
 
-          for (let i = 0; i < excellist.length; i++) {
 
-            const name = excellist[i].department;
-            excellist[i].department =this.findOfficeIdByName(name);
-
-          }
-          this.listStaff = excellist;
-          axios.post('http://localhost:8980/api/v1/staffs/createlist', this.listStaff)
-          .then(response =>{
-            this.listStaffAfter = response
-          })
-          .catch(error =>{
-            console.log(error);
-          })
           // At this point, you get an array containing objects that need to be processed
           const a = workbook.Sheets[workbook.SheetNames[1]]; //Chuyen SheetNames[0] sau khi test xong
           const headers = this.getHeader(a);
 
           this.setTable(headers, excellist);
+          for (let i = 0; i < excellist.length; i++) {
 
+            const name = excellist[i].department;
+            this.all_office_by_name.push(name);
+
+          }
+          this.all_office_by_name = [...new Set(this.all_office_by_name)]
+        console.log('all office by name', this.all_office_by_name)
+          for (let i = 0; i < this.all_office_by_name.length; i++) {
+            if (!this.isExistOffice(this.all_office_by_name[i])) {
+              const office = {name: this.all_office_by_name[i]}
+              console.log('Office', office)
+                axios
+                    .post('http://localhost:8980/api/v1/departments',office )
+                    .then(response =>
+                        console.log(response))
+
+              }
+            }
+          for (let i = 0; i < excellist.length; i++) {
+            const name = excellist[i].department;
+            excellist[i].department =this.findOfficeIdByName(name);
+          }
+          this.listStaff = excellist;
+          axios.post('http://localhost:8980/api/v1/staffs/createlist', this.listStaff)
+              .then(response =>{
+                this.listStaffAfter = response
+              })
+              .catch(error =>{
+                console.log(error);
+              })
           //Chuyen excellist sang id cua deparment
         } catch (e) {
           return alert('Read failure!');
@@ -195,6 +212,10 @@ export default {
     },
 
     findOfficeIdByName(name){
+      axios
+          .get('http://localhost:8980/api/v1/departments')
+          .then(response =>
+              (this.departments = response.data))
       for (let i = 0; i < this.departments.length; i++) {
         if (this.departments[i].name === name) {
           console.log('This is idmmmmmmmmmmmmmmmmm',this.departments[i].id)
@@ -202,6 +223,17 @@ export default {
         }
       }
     },
+
+    isExistOffice(name) {
+      for (let i = 0; i < this.departments.length; i++) {
+        if (this.departments[i].name === name) {
+          return true;
+        }
+
+      }
+      return  false;
+    }
+
   },
 };
 </script>
